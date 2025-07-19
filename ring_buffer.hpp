@@ -322,7 +322,7 @@ public:
 		return ring_buffer::iter_equal(a, b);
 	}
 
-	ring_buffer() : allocator(Allocator()) {}
+	ring_buffer() noexcept(noexcept(Allocator())) : allocator(Allocator()) {}
 
 	ring_buffer(const ring_buffer &other) : allocator(std::allocator_traits<Allocator>::select_on_container_copy_construction(other.allocator))
 	{
