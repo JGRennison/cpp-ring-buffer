@@ -913,6 +913,18 @@ public:
 	{
 		return *this->ptr_at_offset((uint32_t)index);
 	}
+
+	T &at(size_t index)
+	{
+		if (index >= this->size()) throw std::out_of_range("jgr::ring_buffer::at: index out of range");
+		return *this->ptr_at_offset((uint32_t)index);
+	}
+
+	const T &at(size_t index) const
+	{
+		if (index >= this->size()) throw std::out_of_range("jgr::ring_buffer::at: index out of range");
+		return *this->ptr_at_offset((uint32_t)index);
+	}
 };
 
 }
