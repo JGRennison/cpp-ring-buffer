@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <string.h>
 #include <bit>
+#include <stdexcept>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -52,6 +53,7 @@ namespace jgr {
 template <class T, class Allocator = std::allocator<T>>
 class ring_buffer {
 	using Storage = T;
+	static constexpr size_t MAX_SIZE = 1U << 31;
 
 	Storage *data = nullptr;
 	uint32_t head = 0;
@@ -67,8 +69,9 @@ class ring_buffer {
 	static uint32_t round_up_size(uint32_t size)
 	{
 		if (size <= 4) return 4;
-		uint8_t bit = find_last_bit(size - 1);
-		return 1 << (bit + 1);
+		if (size > MAX_SIZE) throw std::length_error("jgr::ring_buffer: maximum size exceeded");
+		uint8_t bit = find_last_bit((uint32_t)size - 1);
+		return 1U << (bit + 1);
 	}
 
 	class ring_buffer_iterator_base {
@@ -258,7 +261,7 @@ private:
 	template <typename U>
 	void construct_from(const U &other)
 	{
-		uint32_t cap = round_up_size((uint32_t)other.size());
+		uint32_t cap = round_up_size(other.size());
 		this->allocate_storage(cap);
 		this->head = 0;
 		this->count = (uint32_t)other.size();
@@ -342,11 +345,11 @@ public:
 	{
 		if (first == last) return;
 
-		uint32_t size = (uint32_t)std::distance(first, last);
+		size_t size = std::distance(first, last);
 		uint32_t cap = round_up_size(size);
 		this->allocate_storage(cap);
 		this->head = 0;
-		this->count = size;
+		this->count = (uint32_t)size;
 		Storage *ptr = this->data;
 		for (auto iter = first; iter != last; ++iter) {
 			new (ptr) T(*iter);
@@ -448,6 +451,11 @@ public:
 	allocator_type get_allocator() const noexcept
 	{
 		return this->allocator;
+	}
+
+	constexpr size_t max_size() const
+	{
+		return MAX_SIZE;
 	}
 
 private:
@@ -661,9 +669,9 @@ public:
 	}
 
 private:
-	uint32_t setup_insert(uint32_t pos, uint32_t num)
+	uint32_t setup_insert(uint32_t pos, size_t num)
 	{
-		if (this->count + num > (uint32_t)this->capacity()) {
+		if (this->count + num > this->capacity()) {
 			/* grow container */
 			const uint32_t cap = round_up_size(this->count + num);
 			Storage *new_buf = this->allocator.allocate(cap);
@@ -769,7 +777,7 @@ public:
 
 		assert(pos.ring == this);
 
-		const uint32_t new_pos_start = this->setup_insert(pos.pos, (uint32_t)count);
+		const uint32_t new_pos_start = this->setup_insert(pos.pos, count);
 		uint32_t new_pos = new_pos_start;
 		for (size_t i = 0; i != count; i++) {
 			new (this->raw_ptr_at_pos(new_pos)) T(value);
@@ -785,7 +793,7 @@ public:
 
 		assert(pos.ring == this);
 
-		const uint32_t new_pos_start = this->setup_insert(pos.pos, (uint32_t)std::distance(first, last));
+		const uint32_t new_pos_start = this->setup_insert(pos.pos, std::distance(first, last));
 		uint32_t new_pos = new_pos_start;
 		for (auto iter = first; iter != last; ++iter) {
 			new (this->raw_ptr_at_pos(new_pos)) T(*iter);
