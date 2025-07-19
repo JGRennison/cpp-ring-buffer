@@ -22,7 +22,7 @@ This container can be used with container adapters such as `std::queue` and `std
 
 ### Usage
 
-Include the `ring_buffer.hpp` file and use: `jgr::ring_buffer<T>` or `jgr::ring_buffer<T, Allocator>`.
+Include `ring_buffer.hpp` and use `jgr::ring_buffer<T>` or `jgr::ring_buffer<T, Allocator>`.
 
 ### Use case
 
@@ -38,7 +38,7 @@ Unlike `std::deque` (and like `std::vector`) inserting elements can cause the ba
 
 ### Tests
 
-Building the tests requires CMake. The Catch test framework is included in `3rdparty/catch`.
+Building the tests requires CMake. The Catch test framework is included in `3rdparty/catch2`.
 
 To run the tests:
 ```
@@ -51,10 +51,10 @@ ctest
 
 To run the tests with sanitisers enabled, add `-DOPTION_SANITISERS=ON` to the cmake command.
 
-### URLs:
+### URLs
 
 This project is hosted at https://github.com/JGRennison/cpp-ring-buffer
 
-### License:
+### License
 
-MIT License, see LICENSE.
+MIT License, see LICENSE file.
