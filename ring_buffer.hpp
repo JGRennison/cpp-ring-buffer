@@ -345,6 +345,16 @@ public:
 		this->move_assign_data(std::move(other));
 	}
 
+	ring_buffer(ring_buffer &&other, const Allocator &alloc) : allocator(alloc)
+	{
+		if (alloc == other.allocator) {
+			this->move_assign_data(std::move(other));
+		} else if (!other.empty()) {
+			this->allocate_storage(round_up_size(other.size()));
+			this->copy_data_from(other);
+		}
+	}
+
 	ring_buffer(std::initializer_list<T> init, const Allocator &alloc = Allocator()) : allocator(alloc)
 	{
 		if (init.size() > 0) {
