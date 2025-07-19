@@ -286,23 +286,28 @@ private:
 
 	void copy_data_from(const ring_buffer &other)
 	{
+		this->head = 0;
+		this->count = other.count;
+		if constexpr (std::is_trivially_copyable_v<T>) {
+			other.memcpy_to(this->data);
+		} else {
+			Storage *ptr = this->data;
+			for (const T &item : other) {
+				new (ptr) T(item);
+				ptr++;
+			}
+		}
+	}
+
+	void copy_assign_from(const ring_buffer &other)
+	{
 		if (!other.empty()) {
 			if (other.size() > this->capacity()) {
-				uint32_t cap = round_up_size(other.count);
+				uint32_t cap = round_up_size(other.size());
 				this->deallocate_storage();
 				this->allocate_storage(cap);
 			}
-			this->head = 0;
-			this->count = other.count;
-			if constexpr (std::is_trivially_copyable_v<T>) {
-				other.memcpy_to(this->data);
-			} else {
-				Storage *ptr = this->data;
-				for (const T &item : other) {
-					new (ptr) T(item);
-					ptr++;
-				}
-			}
+			this->copy_data_from(other);
 		}
 	}
 
@@ -322,14 +327,16 @@ public:
 	ring_buffer(const ring_buffer &other) : allocator(std::allocator_traits<Allocator>::select_on_container_copy_construction(other.allocator))
 	{
 		if (!other.empty()) {
-			this->construct_from(other);
+			this->allocate_storage(round_up_size(other.size()));
+			this->copy_data_from(other);
 		}
 	}
 
 	ring_buffer(const ring_buffer &other, const Allocator &alloc) : allocator(alloc)
 	{
 		if (!other.empty()) {
-			this->construct_from(other);
+			this->allocate_storage(round_up_size(other.size()));
+			this->copy_data_from(other);
 		}
 	}
 
@@ -370,7 +377,7 @@ public:
 				if (this->allocator != other.allocator) this->replace_storage(nullptr, 0); // Do not re-use existing storage if allocators do not match
 				this->allocator = other.allocator;
 			}
-			this->copy_data_from(other);
+			this->copy_assign_from(other);
 		}
 		return *this;
 	}
@@ -383,7 +390,7 @@ public:
 				this->allocator = other.allocator;
 			} else if (this->allocator != other.allocator) {
 				// Do not move existing storage if allocators do not match
-				this->copy_data_from(other);
+				this->copy_assign_from(other);
 				return *this;
 			}
 			this->deallocate_storage();
