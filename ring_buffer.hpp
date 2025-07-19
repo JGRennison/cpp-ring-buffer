@@ -110,6 +110,18 @@ class ring_buffer {
 		this->mask = cap - 1;
 	}
 
+	void move_assign_data(ring_buffer &&other) noexcept
+	{
+		this->data = other.data;
+		this->head = other.head;
+		this->count = other.count;
+		this->mask = other.mask;
+		other.data = nullptr;
+		other.head = 0;
+		other.count = 0;
+		other.mask = (uint32_t)-1;
+	}
+
 public:
 	template <class V, bool REVERSE>
 	class ring_buffer_iterator : public ring_buffer_iterator_base {
@@ -323,14 +335,7 @@ public:
 
 	ring_buffer(ring_buffer &&other) noexcept : allocator(std::move(other.allocator))
 	{
-		this->data = other.data;
-		this->head = other.head;
-		this->count = other.count;
-		this->mask = other.mask;
-		other.data = nullptr;
-		other.head = 0;
-		other.count = 0;
-		other.mask = (uint32_t)-1;
+		this->move_assign_data(std::move(other));
 	}
 
 	ring_buffer(std::initializer_list<T> init, const Allocator &alloc = Allocator()) : allocator(alloc)
@@ -382,14 +387,7 @@ public:
 				return *this;
 			}
 			this->deallocate_storage();
-			this->data = other.data;
-			this->head = other.head;
-			this->count = other.count;
-			this->mask = other.mask;
-			other.data = nullptr;
-			other.head = 0;
-			other.count = 0;
-			other.mask = (uint32_t)-1;
+			this->move_assign_data(std::move(other));
 		}
 		return *this;
 	}
