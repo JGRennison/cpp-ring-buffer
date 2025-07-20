@@ -66,7 +66,7 @@ class ring_buffer {
 		return std::countl_zero<uint32_t>(1) - std::countl_zero<uint32_t>(value);
 	}
 
-	static uint32_t round_up_size(uint32_t size)
+	static uint32_t round_up_size(size_t size)
 	{
 		if (size <= 4) return 4;
 		if (size > MAX_SIZE) throw std::length_error("jgr::ring_buffer: maximum size exceeded");
@@ -495,7 +495,7 @@ private:
 		return this->memcpy_to(target, this->head, this->head + this->count);
 	}
 
-	void reallocate(uint32_t new_cap)
+	void reallocate(size_t new_cap)
 	{
 		const uint32_t cap = round_up_size(new_cap);
 		Storage *new_buf = this->allocator.allocate(cap);
@@ -882,7 +882,7 @@ public:
 	{
 		if (new_cap <= this->capacity()) return;
 
-		this->reallocate((uint32_t)new_cap);
+		this->reallocate(new_cap);
 	}
 
 	void resize(size_t new_size)
@@ -893,7 +893,7 @@ public:
 			}
 		} else if (new_size > this->size()) {
 			if (new_size > this->capacity()) {
-				this->reallocate((uint32_t)new_size);
+				this->reallocate(new_size);
 			}
 			for (uint32_t i = this->count; i != (uint32_t)new_size; i++) {
 				new (this->raw_ptr_at_offset(i)) T();
