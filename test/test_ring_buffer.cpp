@@ -578,3 +578,45 @@ TEMPLATE_TEST_CASE("RingBuffer - basic move-only test", "[ring]", uint8_t, uint3
 	CHECK(ring[0] == 2);
 	CHECK(ring[4] == 10);
 }
+
+TEMPLATE_TEST_CASE("RingBuffer - copy/move constructors and assignment", "[ring]", uint8_t, uint32_t, NonTrivialTestType)
+{
+	std::initializer_list<TestType> init{ 1, 2, 3, 4, 5, 6 };
+	ring_buffer<TestType> ring(init);
+	CHECK(Matches(ring, { 1, 2, 3, 4, 5, 6 }));
+
+	ring_buffer<TestType> ring2(ring.begin() + 1, ring.end() - 2);
+	CHECK(Matches(ring2, { 2, 3, 4 }));
+
+	ring_buffer<TestType> ring3(ring2);
+	CHECK(Matches(ring3, { 2, 3, 4 }));
+	CHECK(Matches(ring2, { 2, 3, 4 }));
+
+	TestType *expect_front = &ring3[0];
+
+	ring_buffer<TestType> ring4(std::move(ring3));
+	CHECK(Matches(ring4, { 2, 3, 4 }));
+	CHECK(Matches(ring3, {}));
+	CHECK(ring3.capacity() == 0);
+	CHECK(expect_front == &ring4[0]);
+
+	ring4.insert(++ring4.begin(), { 10, 11, 12 });
+	CHECK(Matches(ring4, { 2, 10, 11, 12, 3, 4 }));
+
+	TestType *expect_rpos = &*(ring4.rbegin() + 2);
+	ring2.swap(ring4);
+	CHECK(Matches(ring2, { 2, 10, 11, 12, 3, 4 }));
+	CHECK(Matches(ring4, { 2, 3, 4 }));
+	CHECK(expect_rpos == &*(ring2.rbegin() += 2));
+
+	ring4 = ring;
+	CHECK(Matches(ring4, { 1, 2, 3, 4, 5, 6 }));
+	CHECK(Matches(ring, { 1, 2, 3, 4, 5, 6 }));
+
+	TestType *expect_back = &ring2.back();
+	ring4 = std::move(ring2);
+	CHECK(Matches(ring4, { 2, 10, 11, 12, 3, 4 }));
+	CHECK(Matches(ring2, {}));
+	CHECK(ring2.capacity() == 0);
+	CHECK(expect_back == &ring4.back());
+}
