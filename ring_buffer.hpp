@@ -374,7 +374,7 @@ public:
 	{
 		if (&other != this) {
 			this->clear();
-			if (std::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value) {
+			if constexpr (std::allocator_traits<Allocator>::propagate_on_container_copy_assignment::value) {
 				if (this->allocator != other.allocator) this->replace_storage(nullptr, 0); // Do not re-use existing storage if allocators do not match
 				this->allocator = other.allocator;
 			}
@@ -387,7 +387,7 @@ public:
 	{
 		if (&other != this) {
 			this->clear();
-			if (std::allocator_traits<allocator_type>::propagate_on_container_move_assignment::value) {
+			if constexpr (std::allocator_traits<Allocator>::propagate_on_container_move_assignment::value) {
 				this->allocator = other.allocator;
 			} else if (this->allocator != other.allocator) {
 				// Do not move existing storage if allocators do not match
@@ -414,7 +414,9 @@ public:
 		std::swap(this->head, other.head);
 		std::swap(this->count, other.count);
 		std::swap(this->mask, other.mask);
-		if (std::allocator_traits<Allocator>::propagate_on_container_swap::value) std::swap(this->allocator, other.allocator);
+		if constexpr (std::allocator_traits<Allocator>::propagate_on_container_swap::value) {
+			std::swap(this->allocator, other.allocator);
+		}
 	}
 
 	bool operator ==(const ring_buffer& other) const
