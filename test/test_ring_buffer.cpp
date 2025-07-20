@@ -620,3 +620,19 @@ TEMPLATE_TEST_CASE("RingBuffer - copy/move constructors and assignment", "[ring]
 	CHECK(ring2.capacity() == 0);
 	CHECK(expect_back == &ring4.back());
 }
+
+TEMPLATE_TEST_CASE("RingBuffer - equality tests", "[ring]", uint8_t, uint32_t)
+{
+	ring_buffer<TestType> ring1({ 1, 2, 3, 4, 5, 6 });
+	ring_buffer<TestType> ring2({ 3, 4, 5, 6 });
+	CHECK(ring1 != ring2);
+
+	ring2.push_front(2);
+	ring2.push_front(2);
+	CHECK(ring1 != ring2);
+
+	ring2.front() = 1;
+	CHECK(Matches(ring1, { 1, 2, 3, 4, 5, 6 }));
+	CHECK(Matches(ring2, { 1, 2, 3, 4, 5, 6 }));
+	CHECK(ring1 == ring2);
+}
