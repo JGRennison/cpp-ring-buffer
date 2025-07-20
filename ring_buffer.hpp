@@ -523,7 +523,9 @@ private:
 		return this->memcpy_to(target, this->head, this->head + this->count);
 	}
 
-	void reallocate(size_t new_cap)
+	/* Use noinline here to avoid this being inlined into new_front_ptr/new_back_ptr,
+	 * which then prevents those from being inlined. */
+	JGR_NOINLINE void reallocate(size_t new_cap)
 	{
 		const uint32_t cap = round_up_size(new_cap);
 		Storage *new_buf = this->allocator.allocate(cap);
