@@ -627,6 +627,23 @@ TEMPLATE_TEST_CASE("RingBuffer - copy/move constructors and assignment", "[ring]
 	CHECK(expect_back == &ring4.back());
 }
 
+TEMPLATE_TEST_CASE("RingBuffer - copy reverse", "[ring]", uint8_t, uint32_t, NonTrivialTestType)
+{
+	ring_buffer<TestType> ring({ 3, 4, 5, 6 });
+	ring.insert(ring.begin(), { 1, 2 });
+	CHECK(Matches(ring, { 1, 2, 3, 4, 5, 6 }));
+
+	ring_buffer<TestType> ring2(ring.rbegin(), ring.rend());
+	CHECK(Matches(ring2, { 6, 5, 4, 3, 2, 1 }));
+
+	ring_buffer<TestType> ring3(ring.crbegin() += 2, ring.crend() - 1);
+	CHECK(Matches(ring3, { 4, 3, 2 }));
+
+	ring_buffer<TestType> ring4({ 10, 20, 30, 40, 50, 60 });
+	ring4.insert(ring4.end() - 2, ring.rbegin(), ring.rend());
+	CHECK(Matches(ring4, { 10, 20, 30, 40, 6, 5, 4, 3, 2, 1, 50, 60 }));
+}
+
 TEMPLATE_TEST_CASE("RingBuffer - equality tests", "[ring]", uint8_t, uint32_t)
 {
 	ring_buffer<TestType> ring1({ 1, 2, 3, 4, 5, 6 });
