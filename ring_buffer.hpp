@@ -45,6 +45,26 @@ namespace jgr {
 #	define JGR_NO_UNIQUE_ADDRESS
 #endif
 
+#if defined(_MSC_VER)
+#	define JGR_NOINLINE __declspec(noinline)
+#else
+#	define JGR_NOINLINE __attribute__((noinline))
+#endif
+
+namespace detail {
+	struct ring_buffer_util {
+		[[noreturn]] static inline JGR_NOINLINE void throw_length_error()
+		{
+			throw std::length_error("jgr::ring_buffer: maximum size exceeded");
+		}
+
+		[[noreturn]] static inline JGR_NOINLINE void throw_at_out_of_range()
+		{
+			throw std::out_of_range("jgr::ring_buffer::at: index out of range");
+		}
+	};
+};
+
 /**
  * Self-resizing ring-buffer
  *
@@ -70,7 +90,9 @@ class ring_buffer {
 	static uint32_t round_up_size(size_t size)
 	{
 		if (size <= 4) return 4;
-		if (size > MAX_SIZE) throw std::length_error("jgr::ring_buffer: maximum size exceeded");
+		if (size > MAX_SIZE) [[unlikely]] {
+			detail::ring_buffer_util::throw_length_error();
+		}
 		uint8_t bit = find_last_bit((uint32_t)size - 1);
 		return 1U << (bit + 1);
 	}
@@ -930,13 +952,17 @@ public:
 
 	T &at(size_t index)
 	{
-		if (index >= this->size()) throw std::out_of_range("jgr::ring_buffer::at: index out of range");
+		if (index >= this->size()) [[unlikely]] {
+			detail::ring_buffer_util::throw_at_out_of_range();
+		}
 		return *this->ptr_at_offset((uint32_t)index);
 	}
 
 	const T &at(size_t index) const
 	{
-		if (index >= this->size()) throw std::out_of_range("jgr::ring_buffer::at: index out of range");
+		if (index >= this->size()) [[unlikely]] {
+			detail::ring_buffer_util::throw_at_out_of_range();
+		}
 		return *this->ptr_at_offset((uint32_t)index);
 	}
 };
@@ -944,5 +970,6 @@ public:
 }
 
 #undef JGR_NO_UNIQUE_ADDRESS
+#undef JGR_NOINLINE
 
 #endif /* JGR_RING_BUFFER_HPP */
