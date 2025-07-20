@@ -419,13 +419,13 @@ public:
 		}
 	}
 
-	bool operator ==(const ring_buffer& other) const
+	friend bool operator ==(const ring_buffer &a, const ring_buffer &b)
 	{
-		if (this->count != other.count) return false;
-		if (this->empty()) return true;
+		if (a.count != b.count) return false;
+		if (a.empty()) return true;
 
-		auto other_iter = other.begin();
-		for (const T &item : *this) {
+		auto other_iter = b.begin();
+		for (const T &item : a) {
 			if (item != *other_iter) return false;
 			++other_iter;
 		}
