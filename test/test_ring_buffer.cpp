@@ -109,6 +109,8 @@ TEMPLATE_TEST_CASE("RingBuffer - basic tests", "[ring]", uint8_t, uint32_t, NonT
 {
 	ring_buffer<TestType> ring({ 1, 2, 3, 4, 5, 6 });
 	CHECK(Matches(ring, { 1, 2, 3, 4, 5, 6 }));
+	CHECK(ring[0] == 1);
+	CHECK(ring.at(3) == 4);
 
 	ring.push_front(0);
 	CHECK(Matches(ring, { 0, 1, 2, 3, 4, 5, 6 }));
@@ -127,6 +129,8 @@ TEMPLATE_TEST_CASE("RingBuffer - basic tests", "[ring]", uint8_t, uint32_t, NonT
 
 	CHECK(ring[0] == 2);
 	CHECK(ring[4] == 10);
+	CHECK(ring.at(5) == 11);
+	CHECK_THROWS_AS(ring.at(6), std::out_of_range);
 }
 
 TEMPLATE_TEST_CASE("RingBuffer - front resize", "[ring]", uint8_t, uint32_t, NonTrivialTestType)
