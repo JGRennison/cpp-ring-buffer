@@ -270,16 +270,16 @@ private:
 		return (a.ring == b.ring) && (a.pos == b.pos);
 	}
 
-	template <typename U>
-	void construct_from(const U &other)
+	template <typename InputIt>
+	void construct_from(size_t size, InputIt first, InputIt last)
 	{
-		uint32_t cap = round_up_size(other.size());
+		uint32_t cap = round_up_size(size);
 		this->allocate_storage(cap);
 		this->head = 0;
-		this->count = (uint32_t)other.size();
+		this->count = (uint32_t)size;
 		Storage *ptr = this->data;
-		for (const T &item : other) {
-			new (ptr) T(item);
+		for (auto iter = first; iter != last; ++iter) {
+			new (ptr) T(*iter);
 			ptr++;
 		}
 	}
@@ -358,24 +358,15 @@ public:
 	ring_buffer(std::initializer_list<T> init, const Allocator &alloc = Allocator()) : allocator(alloc)
 	{
 		if (init.size() > 0) {
-			this->construct_from(init);
+			this->construct_from(init.size(), init.begin(), init.end());
 		}
 	}
 
 	template <typename InputIt, typename = std::enable_if_t<std::is_convertible<typename std::iterator_traits<InputIt>::iterator_category, std::input_iterator_tag>::value>>
 	ring_buffer(InputIt first, InputIt last, const Allocator &alloc = Allocator()) : allocator(alloc)
 	{
-		if (first == last) return;
-
-		size_t size = std::distance(first, last);
-		uint32_t cap = round_up_size(size);
-		this->allocate_storage(cap);
-		this->head = 0;
-		this->count = (uint32_t)size;
-		Storage *ptr = this->data;
-		for (auto iter = first; iter != last; ++iter) {
-			new (ptr) T(*iter);
-			ptr++;
+		if (first != last) {
+			this->construct_from(std::distance(first, last), first, last);
 		}
 	}
 
