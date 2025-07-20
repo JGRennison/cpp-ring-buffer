@@ -553,6 +553,11 @@ TEMPLATE_TEST_CASE("RingBuffer - resize", "[ring]", uint8_t, uint32_t, NonTrivia
 	ring.resize(12);
 	CHECK(Matches(ring, { 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0 }));
 	CHECK(ring.capacity() == 16);
+
+	ring.pop_front();
+	ring.resize(7);
+	CHECK(Matches(ring, { 2, 3, 4, 5, 6, 7, 8 }));
+	CHECK(ring.capacity() == 16);
 }
 
 TEMPLATE_TEST_CASE("RingBuffer - basic move-only test", "[ring]", uint8_t, uint32_t, NonTrivialTestType, MoveOnlyTestType)
