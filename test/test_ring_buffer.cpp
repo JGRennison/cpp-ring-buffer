@@ -25,6 +25,7 @@
 
 #include "../3rdparty/catch2/catch.hpp"
 #include "../ring_buffer.hpp"
+#include <compare>
 #include <sstream>
 
 using jgr::ring_buffer;
@@ -635,4 +636,14 @@ TEMPLATE_TEST_CASE("RingBuffer - equality tests", "[ring]", uint8_t, uint32_t)
 	CHECK(Matches(ring1, { 1, 2, 3, 4, 5, 6 }));
 	CHECK(Matches(ring2, { 1, 2, 3, 4, 5, 6 }));
 	CHECK(ring1 == ring2);
+}
+
+TEMPLATE_TEST_CASE("RingBuffer - operator <=>", "[ring]", uint8_t, uint32_t)
+{
+	CHECK((ring_buffer<TestType>({ 1, 2, 3, 4, 5, 6 }) <=> ring_buffer<TestType>({ 1, 2, 3, 4, 5, 6 })) == std::weak_ordering::equivalent);
+	CHECK((ring_buffer<TestType>({ 1, 2, 3, 4, 5, 6 }) <=> ring_buffer<TestType>({ 2, 3, 4, 5, 6 })) == std::weak_ordering::less);
+	CHECK((ring_buffer<TestType>({ 1, 2, 3 }) <=> ring_buffer<TestType>({ 1, 2, 3, 4, 5, 6 })) == std::weak_ordering::less);
+	CHECK((ring_buffer<TestType>({ 1, 2, 3, 4, 5, 6 }) <=> ring_buffer<TestType>({ 1, 2, 3 })) == std::weak_ordering::greater);
+	CHECK((ring_buffer<TestType>({}) <=> ring_buffer<TestType>({ 1 })) == std::weak_ordering::less);
+	CHECK((ring_buffer<TestType>({}) <=> ring_buffer<TestType>({})) == std::weak_ordering::equivalent);
 }

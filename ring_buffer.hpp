@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <algorithm>
 #include <bit>
 #include <stdexcept>
 #include <iterator>
@@ -430,6 +431,11 @@ public:
 			++other_iter;
 		}
 		return true;
+	}
+
+	friend auto operator <=>(const ring_buffer &a, const ring_buffer &b)
+	{
+		return std::lexicographical_compare_three_way(a.begin(), a.end(), b.begin(), b.end());
 	}
 
 	size_t size() const
