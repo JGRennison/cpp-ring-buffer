@@ -707,11 +707,13 @@ public:
 	}
 
 private:
-	uint32_t setup_insert(uint32_t pos, size_t num)
+	uint32_t setup_insert(uint32_t pos, size_t num_to_insert)
 	{
-		if (this->count + num > this->capacity()) {
+		/* Use size_t num_to_insert in capacity check and call to round_up_size */
+		const uint32_t num = static_cast<uint32_t>(num_to_insert);
+		if (this->count + num_to_insert > this->capacity()) {
 			/* grow container */
-			const uint32_t cap = round_up_size(this->count + num);
+			const uint32_t cap = round_up_size(this->count + num_to_insert);
 			Storage *new_buf = this->allocator.allocate(cap);
 			if constexpr (std::is_trivially_copyable_v<T>) {
 				Storage *insert_gap = this->memcpy_to(new_buf, this->head, pos);
