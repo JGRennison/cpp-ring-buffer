@@ -40,6 +40,8 @@ Unlike `std::deque` (and like `std::vector`) inserting elements can cause the ba
 reallocated to insert the new element. i.e. `ring.emplace_back(std::move(ring.back())` is allowed for a non-empty container.
 This is not the case for `insert` and `emplace`. `ring.emplace(ring.begin() + N, std::move(ring.back()))` is undefined behaviour.
 
+If inserting, moving, copying or otherwise constructing an element throws an exception, the result is undefined.
+
 ### Tests
 
 Building the tests requires CMake. The Catch test framework is included in `3rdparty/catch2`.
