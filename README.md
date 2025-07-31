@@ -36,6 +36,10 @@ Ring buffers are limited to a maximum size and capacity of `1 << 31` (about 2.1 
 
 Unlike `std::deque` (and like `std::vector`) inserting elements can cause the backing storage to be reallocated, invalidating existing references and iterators.
 
+`push_back`, `push_front`, `emplace_front` and `emplace_back` may reference an existing element in the container, even in the case where the container will be
+reallocated to insert the new element. i.e. `ring.emplace_back(std::move(ring.back())` is allowed for a non-empty container.
+This is not the case for `insert` and `emplace`. `ring.emplace(ring.begin() + N, std::move(ring.back()))` is undefined behaviour.
+
 ### Tests
 
 Building the tests requires CMake. The Catch test framework is included in `3rdparty/catch2`.
